@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MF Backtest — Indian Mutual Fund Strategy Analyser</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ─── Header ─────────────────────────────────────────────────── -->
+<header>
+  <div>
+    <h1>📈 MF Backtest</h1>
+    <p>Indian Mutual Fund Strategy Backtester · 25 Years of Data</p>
+  </div>
+  <span class="header-badge">India Markets</span>
+</header>
+<div id="status-bar" class="status-bar status-info">Loading…</div>
+
+<!-- ─── Main ────────────────────────────────────────────────────── -->
+<main>
+<div class="container">
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="compare-tab">⚖️ Strategy Comparison</button>
+    <button class="tab-btn" data-tab="deep-dive">🔍 Deep Dive</button>
+    <button class="tab-btn" data-tab="calc-tab">🧮 SIP Calculator</button>
+    <button class="tab-btn" data-tab="funds-tab">📂 Fund Explorer</button>
+  </nav>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 1: Strategy Comparison
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="compare-tab" class="tab-content active">
+
+    <!-- Params -->
+    <div class="card">
+      <h3>Backtest Parameters</h3>
+      <div class="card-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="comp-start" value="2000-01-01" />
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="comp-end" value="2024-12-31" />
+        </div>
+        <div class="form-group">
+          <label>Monthly SIP (₹)</label>
+          <input type="number" id="comp-sip" value="75000" min="1000" step="1000" />
+        </div>
+        <div class="form-group">
+          <label>Annual Step-Up (%)</label>
+          <input type="number" id="comp-stepup" value="10" min="0" max="50" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Chart Metric</label>
+          <select id="comp-metric">
+            <option value="cagr">CAGR</option>
+            <option value="xirr">XIRR</option>
+            <option value="absolute_return">Absolute Return</option>
+            <option value="final_value">Final Value</option>
+            <option value="sharpe_ratio">Sharpe Ratio</option>
+            <option value="max_drawdown">Max Drawdown</option>
+            <option value="volatility">Volatility</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btn-compare">▶ Run All Strategies</button>
+      </div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <h3>Strategy Comparison</h3>
+      <div class="chart-container">
+        <canvas id="comparison-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Results table -->
+    <div class="card">
+      <h3>Results Table</h3>
+      <div id="comparison-table-container">
+        <p style="color:var(--text-muted);font-size:0.9rem;">Run all strategies to see results here.</p>
+      </div>
+    </div>
+
+    <!-- Multi-strategy growth -->
+    <div class="card">
+      <h3>Portfolio Growth Over Time — All Strategies</h3>
+      <div class="chart-container tall">
+        <canvas id="multi-growth-chart"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 2: Deep Dive
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="deep-dive" class="tab-content">
+
+    <!-- Params -->
+    <div class="card">
+      <h3>Strategy Parameters</h3>
+      <div class="card-row">
+        <div class="form-group">
+          <label>Strategy</label>
+          <select id="dive-strategy" class="strategy-select"></select>
+        </div>
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="dive-start" value="2000-01-01" />
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="dive-end" value="2024-12-31" />
+        </div>
+        <div class="form-group">
+          <label>Monthly SIP (₹)</label>
+          <input type="number" id="dive-sip" value="75000" min="1000" step="1000" />
+        </div>
+        <div class="form-group">
+          <label>Annual Step-Up (%)</label>
+          <input type="number" id="dive-stepup" value="10" min="0" max="50" step="1" />
+        </div>
+        <button class="btn btn-primary" id="btn-dive">▶ Run</button>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div id="dive-metrics"></div>
+    <div id="export-container" style="margin-bottom:1rem;"></div>
+
+    <!-- Portfolio Growth -->
+    <div class="card">
+      <h3>Portfolio Growth</h3>
+      <div class="chart-container tall">
+        <canvas id="growth-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- Drawdown -->
+      <div class="card">
+        <h3>Drawdown</h3>
+        <div class="chart-container short">
+          <canvas id="drawdown-chart"></canvas>
+        </div>
+      </div>
+      <!-- Allocation Pie -->
+      <div class="card">
+        <h3>Fund Allocation</h3>
+        <div class="chart-container short">
+          <canvas id="allocation-pie"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIP Step-up Chart -->
+    <div class="card">
+      <h3>SIP Step-Up Schedule</h3>
+      <div class="chart-container">
+        <canvas id="sip-schedule-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- SIP Table -->
+    <div class="card">
+      <h3>SIP Schedule (Year-wise)</h3>
+      <div id="sip-table"></div>
+    </div>
+
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 3: SIP Calculator
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="calc-tab" class="tab-content">
+
+    <!-- Params -->
+    <div class="card">
+      <h3>Future SIP Projection (Forward-looking)</h3>
+      <div class="card-row">
+        <div class="form-group">
+          <label>Monthly SIP (₹)</label>
+          <input type="number" id="proj-sip" value="75000" min="1000" step="1000" />
+        </div>
+        <div class="form-group">
+          <label>Annual Step-Up (%)</label>
+          <input type="number" id="proj-stepup" value="10" min="0" max="50" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Investment Duration (Years)</label>
+          <input type="number" id="proj-years" value="15" min="1" max="40" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Expected Annual Return (%)</label>
+          <input type="number" id="proj-return" value="14" min="1" max="30" step="0.5" />
+        </div>
+        <button class="btn btn-primary" id="btn-project">▶ Calculate</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">
+        Note: Returns 12% → Conservative, 14% → Moderate, 17% → Aggressive (based on historical Indian equity MF data)
+      </p>
+    </div>
+
+    <!-- Summary -->
+    <div id="projection-summary"></div>
+
+    <!-- Chart -->
+    <div class="card">
+      <h3>Corpus Growth Projection</h3>
+      <div class="chart-container tall">
+        <canvas id="projection-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Strategy targets info box -->
+    <div class="card">
+      <h3>Return Benchmarks (Historical, India Equity MFs)</h3>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Category</th><th>15-yr Avg CAGR</th><th>Best Performer</th><th>Worst Performer</th><th>Risk Level</th></tr></thead>
+          <tbody>
+            <tr><td>Large Cap</td><td>13–15%</td><td>~18%</td><td>~9%</td><td>Moderate</td></tr>
+            <tr><td>Mid Cap</td><td>15–18%</td><td>~22%</td><td>~10%</td><td>High</td></tr>
+            <tr><td>Small Cap</td><td>16–20%</td><td>~25%</td><td>~8%</td><td>Very High</td></tr>
+            <tr><td>Flexi Cap</td><td>14–16%</td><td>~20%</td><td>~10%</td><td>Moderate-High</td></tr>
+            <tr><td>Balanced Advantage</td><td>11–14%</td><td>~16%</td><td>~8%</td><td>Moderate</td></tr>
+            <tr><td>Index (Nifty 50)</td><td>13–15%</td><td>—</td><td>—</td><td>Moderate</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem;">
+        * Past performance is not indicative of future returns. SEBI mandates this disclaimer for all mutual fund communications.
+      </p>
+    </div>
+
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 4: Fund Explorer
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="funds-tab" class="tab-content">
+
+    <!-- Fund list -->
+    <div class="card">
+      <h3>Registered Funds in Backtest Engine</h3>
+      <div id="funds-table-container">
+        <p style="color:var(--text-muted);">Loading fund list…</p>
+      </div>
+    </div>
+
+    <!-- NAV viewer -->
+    <div class="card">
+      <h3>NAV History Viewer</h3>
+      <div class="card-row">
+        <div class="form-group">
+          <label>Fund</label>
+          <select id="fund-select" style="min-width:320px;"></select>
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <input type="date" id="nav-start" value="2000-01-01" />
+        </div>
+        <div class="form-group">
+          <label>To</label>
+          <input type="date" id="nav-end" value="2024-12-31" />
+        </div>
+        <button class="btn btn-secondary" id="btn-load-nav">Load NAV</button>
+      </div>
+      <div id="nav-chart-container" class="chart-container tall" style="margin-top:1rem;">
+        <p style="color:var(--text-muted);padding:1rem;">Select a fund and click "Load NAV"</p>
+      </div>
+    </div>
+
+    <!-- Data sources info -->
+    <div class="card">
+      <h3>Data Sources</h3>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Source</th><th>What</th><th>Coverage</th><th>Access</th></tr></thead>
+          <tbody>
+            <tr><td><strong>mfapi.in</strong></td><td>Historical NAV for all AMFI-registered mutual funds</td><td>Fund inception to today</td><td>Free REST API</td></tr>
+            <tr><td><strong>AMFI India</strong></td><td>Fund metadata, current NAV, scheme classification</td><td>Current + daily updates</td><td>Free CSV download</td></tr>
+            <tr><td><strong>NSE / yfinance</strong></td><td>Nifty 50, Midcap 150, Smallcap 250 index data</td><td>~2000 onwards</td><td>Free (yfinance)</td></tr>
+            <tr><td><strong>Index Fund NAV</strong></td><td>TRI proxy via UTI/HDFC Nifty index fund NAV</td><td>Fund inception (used as TRI proxy)</td><td>mfapi.in</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</div><!-- /container -->
+</main>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
