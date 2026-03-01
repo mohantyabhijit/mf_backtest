@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MF Database Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/explorer.css') }}">
+</head>
+<body>
+    <header>
+        <h1>🗃️ MF Database Explorer</h1>
+        <div id="db-info" class="db-info">
+            <span id="db-path"></span>
+            <span id="db-size"></span>
+            <span id="total-records"></span>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('overview')">📊 Overview</button>
+        <button class="tab-btn" onclick="showTab('tables')">📋 Tables</button>
+        <button class="tab-btn" onclick="showTab('query')">🔍 SQL Query</button>
+        <button class="tab-btn" onclick="showTab('schema')">🏗️ Schema</button>
+    </nav>
+
+    <main>
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <h3>📈 Database Summary</h3>
+                    <div id="summary-stats"></div>
+                </div>
+                <div class="overview-card">
+                    <h3>📊 Table Overview</h3>
+                    <div id="table-summary"></div>
+                </div>
+                <div class="overview-card">
+                    <h3>🚀 Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button onclick="showTab('tables')">Browse Tables</button>
+                        <button onclick="showTab('query')">Run Query</button>
+                        <button onclick="loadSampleQuery('funds')">Sample Fund Query</button>
+                        <button onclick="loadSampleQuery('nav')">Sample NAV Query</button>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <h3>💡 Sample Queries</h3>
+                    <div class="sample-queries">
+                        <button onclick="loadQuery('SELECT * FROM funds LIMIT 10')">Show Funds</button>
+                        <button onclick="loadQuery('SELECT fund_id, COUNT(*) as records FROM nav_data GROUP BY fund_id ORDER BY records DESC')">NAV Counts</button>
+                        <button onclick="loadQuery('SELECT * FROM volatility_data ORDER BY date DESC LIMIT 20')">Recent VIX</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Tab -->
+        <div id="tables-tab" class="tab-content">
+            <div class="table-controls">
+                <select id="table-select" onchange="loadTableData()">
+                    <option value="">Select a table...</option>
+                </select>
+                <div class="pagination-controls">
+                    <button id="prev-page" onclick="prevPage()">Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" onclick="nextPage()">Next</button>
+                    <select id="per-page" onchange="loadTableData()">
+                        <option value="25">25 per page</option>
+                        <option value="50" selected>50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                </div>
+            </div>
+            <div id="table-data-container">
+                <p>Select a table to view its data</p>
+            </div>
+        </div>
+
+        <!-- SQL Query Tab -->
+        <div id="query-tab" class="tab-content">
+            <div class="query-container">
+                <div class="query-editor">
+                    <textarea id="sql-query" placeholder="Enter your SQL query here...
+Example:
+SELECT fund_id, COUNT(*) as nav_records, 
+       MIN(date) as start_date, MAX(date) as end_date
+FROM nav_data 
+GROUP BY fund_id 
+ORDER BY nav_records DESC
+LIMIT 10"></textarea>
+                    <div class="query-controls">
+                        <button onclick="executeQuery()">▶️ Execute Query</button>
+                        <button onclick="clearQuery()">🗑️ Clear</button>
+                        <span id="query-status"></span>
+                    </div>
+                </div>
+                <div id="query-results" class="query-results">
+                    <p>Enter and execute a SQL query to see results</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schema Tab -->
+        <div id="schema-tab" class="tab-content">
+            <div class="schema-container">
+                <div class="schema-controls">
+                    <select id="schema-table-select" onchange="loadTableSchema()">
+                        <option value="">Select a table...</option>
+                    </select>
+                </div>
+                <div id="schema-details">
+                    <p>Select a table to view its schema</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeError()">&times;</span>
+            <h3>❌ Error</h3>
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/explorer.js') }}"></script>
+</body>
+</html>

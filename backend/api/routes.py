@@ -1,9 +1,11 @@
 """Flask API routes for MF Backtest."""
+import os
+import sqlite3
 from flask import Blueprint, request, jsonify
 from backend.backtest.strategies import list_strategies, get_strategy, STRATEGIES
 from backend.backtest.engine import simulate_strategy
 from backend.backtest.metrics import compute_all_metrics
-from backend.data.store import get_all_funds, get_nav_series, get_index_series, get_fund, get_nav_date_range
+from backend.data.store import get_all_funds, get_nav_series, get_index_series, get_fund, get_nav_date_range, get_connection, DB_PATH
 from backend.data.fund_registry import FUNDS
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -167,3 +169,155 @@ def sip_projection():
         "final_corpus": round(corpus, 0),
         "expected_return_pct": expected_return * 100,
     })
+
+
+# ═══════════════════════════════════════════════════════════════
+# Data Explorer API Routes
+# ═══════════════════════════════════════════════════════════════
+
+@api.route("/data-explorer/info", methods=["GET"])
+def data_explorer_info():
+    """Get database information for the data explorer."""
+    try:
+        db_size = os.path.getsize(DB_PATH)
+        conn = get_connection()
+        
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchall()
+        total_records = 0
+        for table in tables:
+            count = conn.execute(f"SELECT COUNT(*) FROM `{table[0]}`").fetchone()[0]
+            total_records += count
+        
+        sqlite_version = conn.execute("SELECT sqlite_version()").fetchone()[0]
+        conn.close()
+        
+        return jsonify({
+            'database_path': str(DB_PATH),
+            'database_size': db_size,
+            'database_size_mb': round(db_size / (1024 * 1024), 2),
+            'total_tables': len(tables),
+            'total_records': total_records,
+            'sqlite_version': sqlite_version
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route("/data-explorer/tables", methods=["GET"])
+def data_explorer_tables():
+    """Get list of all tables with metadata."""
+    try:
+        conn = get_connection()
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall()
+        
+        table_info = []
+        for table in tables:
+            table_name = table[0]
+            count = conn.execute(f"SELECT COUNT(*) FROM `{table_name}`").fetchone()[0]
+            columns = conn.execute(f"PRAGMA table_info(`{table_name}`)").fetchall()
+            column_names = [col[1] for col in columns]
+            sample_data = conn.execute(f"SELECT * FROM `{table_name}` LIMIT 3").fetchall()
+            
+            table_info.append({
+                'name': table_name,
+                'count': count,
+                'columns': column_names,
+                'sample_data': [dict(zip(column_names, row)) for row in sample_data]
+            })
+        
+        conn.close()
+        return jsonify({'tables': table_info})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route("/data-explorer/table/<table_name>", methods=["GET"])
+def data_explorer_table_data(table_name):
+    """Get paginated data from a specific table."""
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 50))
+        offset = (page - 1) * per_page
+        
+        conn = get_connection()
+        
+        total = conn.execute(f"SELECT COUNT(*) FROM `{table_name}`").fetchone()[0]
+        data = conn.execute(f"SELECT * FROM `{table_name}` LIMIT {per_page} OFFSET {offset}").fetchall()
+        columns = conn.execute(f"PRAGMA table_info(`{table_name}`)").fetchall()
+        column_names = [col[1] for col in columns]
+        
+        rows = [dict(zip(column_names, row)) for row in data]
+        
+        conn.close()
+        
+        return jsonify({
+            'data': rows,
+            'columns': column_names,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': (total + per_page - 1) // per_page
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route("/data-explorer/schema/<table_name>", methods=["GET"])
+def data_explorer_table_schema(table_name):
+    """Get schema information for a specific table."""
+    try:
+        conn = get_connection()
+        columns = conn.execute(f"PRAGMA table_info(`{table_name}`)").fetchall()
+        indexes = conn.execute(f"PRAGMA index_list(`{table_name}`)").fetchall()
+        create_sql = conn.execute(f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table_name}'").fetchone()
+        
+        conn.close()
+        
+        return jsonify({
+            'columns': [
+                {
+                    'name': col[1],
+                    'type': col[2],
+                    'not_null': bool(col[3]),
+                    'default': col[4],
+                    'primary_key': bool(col[5])
+                }
+                for col in columns
+            ],
+            'indexes': [{'name': idx[1], 'unique': bool(idx[2])} for idx in indexes],
+            'create_sql': create_sql[0] if create_sql else None
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route("/data-explorer/query", methods=["POST"])
+def data_explorer_query():
+    """Execute a SELECT query and return results."""
+    try:
+        body = request.get_json(force=True) or {}
+        query = body.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'error': 'No query provided'}), 400
+        
+        if not query.upper().startswith('SELECT'):
+            return jsonify({'error': 'Only SELECT queries are allowed'}), 400
+        
+        conn = get_connection()
+        cursor = conn.execute(query)
+        results = cursor.fetchall()
+        column_names = [description[0] for description in cursor.description] if cursor.description else []
+        rows = [dict(zip(column_names, row)) for row in results]
+        
+        conn.close()
+        
+        return jsonify({
+            'data': rows,
+            'columns': column_names,
+            'row_count': len(rows)
+        })
+    except sqlite3.Error as e:
+        return jsonify({'error': f'SQL Error: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

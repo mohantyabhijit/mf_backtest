@@ -29,6 +29,7 @@
     <button class="tab-btn" data-tab="deep-dive">🔍 Deep Dive</button>
     <button class="tab-btn" data-tab="calc-tab">🧮 SIP Calculator</button>
     <button class="tab-btn" data-tab="funds-tab">📂 Fund Explorer</button>
+    <button class="tab-btn" data-tab="data-explorer">🗃️ Data Explorer</button>
   </nav>
 
   <!-- ════════════════════════════════════════════════════════════
@@ -292,6 +293,102 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 5: Data Explorer
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="data-explorer" class="tab-content">
+
+    <!-- Database Overview -->
+    <div class="card">
+      <h3>📊 Database Overview</h3>
+      <div id="db-overview" class="card-row">
+        <div class="metric-box">
+          <span class="metric-label">Database Size</span>
+          <span class="metric-value" id="db-size">-</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Total Tables</span>
+          <span class="metric-value" id="db-tables">-</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Total Records</span>
+          <span class="metric-value" id="db-records">-</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">SQLite Version</span>
+          <span class="metric-value" id="sqlite-version">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explorer Tabs -->
+    <div class="card">
+      <nav class="explorer-tabs">
+        <button class="explorer-tab-btn active" data-explorer-tab="tables">📋 Tables</button>
+        <button class="explorer-tab-btn" data-explorer-tab="query">🔍 SQL Query</button>
+        <button class="explorer-tab-btn" data-explorer-tab="schema">🏗️ Schema</button>
+      </nav>
+
+      <!-- Tables View -->
+      <div id="explorer-tables" class="explorer-tab-content active">
+        <div class="table-controls">
+          <select id="explorer-table-select">
+            <option value="">Select a table...</option>
+          </select>
+          <div class="pagination-controls">
+            <button id="explorer-prev-page">Previous</button>
+            <span id="explorer-page-info">Page 1</span>
+            <button id="explorer-next-page">Next</button>
+            <select id="explorer-per-page">
+              <option value="25">25 per page</option>
+              <option value="50" selected>50 per page</option>
+              <option value="100">100 per page</option>
+            </select>
+          </div>
+        </div>
+        <div id="explorer-table-data">
+          <p style="color:var(--text-muted);text-align:center;padding:2rem;">Select a table to view its data</p>
+        </div>
+      </div>
+
+      <!-- SQL Query View -->
+      <div id="explorer-query" class="explorer-tab-content">
+        <div class="query-editor">
+          <textarea id="explorer-sql-query" placeholder="Enter your SQL query here... (SELECT statements only)
+Example:
+SELECT f.name, f.category, COUNT(*) as records 
+FROM funds f 
+LEFT JOIN nav_data n ON f.id = n.fund_id 
+GROUP BY f.id 
+ORDER BY records DESC 
+LIMIT 10;"></textarea>
+          <div class="query-controls">
+            <button class="btn btn-primary" id="execute-query-btn">▶️ Execute Query</button>
+            <button class="btn btn-secondary" id="clear-query-btn">🗑️ Clear</button>
+            <button class="btn btn-secondary" id="sample-query-btn">📝 Sample Query</button>
+          </div>
+        </div>
+        <div id="explorer-query-results">
+          <p style="color:var(--text-muted);text-align:center;padding:2rem;">Enter and execute a SQL query to see results</p>
+        </div>
+      </div>
+
+      <!-- Schema View -->
+      <div id="explorer-schema" class="explorer-tab-content">
+        <div class="schema-controls">
+          <select id="explorer-schema-table-select">
+            <option value="">Select a table...</option>
+          </select>
+        </div>
+        <div id="explorer-schema-details">
+          <p style="color:var(--text-muted);text-align:center;padding:2rem;">Select a table to view its schema</p>
+        </div>
+      </div>
+
     </div>
 
   </section>

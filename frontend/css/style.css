@@ -221,14 +221,230 @@ select option { background: var(--surface2); }
   font-size: 0.9rem;
 }
 
+/* ─── Data Explorer Styles ──────────────────────────────────────── */
+.explorer-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.explorer-tab-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.explorer-tab-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.explorer-tab-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.explorer-tab-content {
+  display: none;
+  min-height: 400px;
+}
+
+.explorer-tab-content.active {
+  display: block;
+}
+
+.table-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.table-controls select {
+  min-width: 200px;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.pagination-controls button {
+  padding: 0.4rem 0.8rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#explorer-page-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.query-editor {
+  margin-bottom: 1.5rem;
+}
+
+#explorer-sql-query {
+  width: 100%;
+  height: 150px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  color: var(--text);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+#explorer-sql-query::placeholder {
+  color: var(--text-muted);
+}
+
+.query-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.schema-controls {
+  margin-bottom: 1rem;
+}
+
+.schema-table {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.schema-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.schema-table th,
+.schema-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.schema-table th {
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.schema-table td {
+  font-size: 0.85rem;
+}
+
+.schema-table tr:last-child td {
+  border-bottom: none;
+}
+
+.create-sql {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.create-sql pre {
+  color: var(--text-muted);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow-x: auto;
+}
+
+#db-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.metric-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Loading Spinner */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 0.5rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .two-col, .three-col { grid-template-columns: 1fr; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }
   header { flex-wrap: wrap; }
+  .table-controls { flex-direction: column; align-items: stretch; }
+  .pagination-controls { margin-left: 0; justify-content: center; }
 }
 @media (max-width: 600px) {
   header h1 { font-size: 1.1rem; }
   .tab-btn { padding: 0.6rem 0.9rem; font-size: 0.82rem; }
   .card { padding: 1rem; }
+  .explorer-tabs { flex-wrap: wrap; }
+  #db-overview { grid-template-columns: repeat(2, 1fr); }
 }

@@ -7,6 +7,7 @@ import {
   renderAllocationPie, renderSIPSchedule, renderMultiGrowth, renderProjection,
 } from "./charts.js";
 import { formatCurrency, formatPct, formatNum, setLoading, showError, showStatus } from "./utils.js";
+import { initDataExplorer } from "./dataExplorer.js";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let allStrategies = [];
@@ -409,4 +410,7 @@ initTabs();
 loadInitialData().then(() => {
   // Auto-run projection on load
   calcProjection();
+  
+  // Initialize data explorer
+  initDataExplorer();
 });
